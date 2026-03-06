@@ -57,6 +57,13 @@ While standard Kubernetes deployments typically leverage `Secrets` or `cert-mana
 
 ## 🚀 Deployment Procedure
 
+### Local Testing
+When testing it locally, you need to add this to **/etc/hosts** so you can see the TLS cert in action.
+```text
+127.0.0.1 foobar.local
+
+```
+
 ### Prerequisites
 
 * A running Kubernetes cluster (`Kind`, `Minikube`, or Cloud-managed).
