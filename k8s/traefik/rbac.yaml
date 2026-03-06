@@ -1,3 +1,4 @@
+# RPAC, Role-Based Access Control ensuring Traefik has the minimum necessary API permissions to watch resources
 apiVersion: v1
 kind: ServiceAccount
 metadata:

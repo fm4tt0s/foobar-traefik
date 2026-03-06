@@ -1,4 +1,4 @@
-# isolating the stack
+# logical isolation boundary for the foobar-api stack and its associated resources
 apiVersion: v1
 kind: Namespace
 metadata:

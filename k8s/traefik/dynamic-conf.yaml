@@ -1,4 +1,4 @@
-# This file will be mounted via ConfigMap into Traefik's /etc/traefik/dynamic/ directory
+# Traefik file provider config, bridges the physical PVC certificate files to the logical TLS store
 tls:
   certificates:
     - certFile: /certs/tls.crt   # Path inside the Traefik container

@@ -1,3 +1,4 @@
+# Persistent storage definition to fulfill the requirement for file-system-based certificate management.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -6,9 +7,10 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  # Architect Tip: Use empty string for local/standard testing to 
-  # use the default provisioner, or specify 'standard' for Minikube.
-  storageClassName: "" 
+  # use empty string for local/standard testing to 
+  # use the default provisioner, or specify 'standard' for Minikube/Kind
+  # since Im using Rancher for testing, it needs to be explicitly set
+  storageClassName: "local-path" 
   resources:
     requests:
       storage: 128Mi

@@ -1,4 +1,4 @@
-# includes liveness/readiness probes and monitoring annotations
+# service definition including SRE-focused liveness/readiness probes and resource constraints
 apiVersion: apps/v1
 kind: Deployment
 metadata:

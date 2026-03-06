@@ -1,5 +1,5 @@
 # the history/docs for the encapsulated in code
-# Variables
+# variables
 NAMESPACE=foobar-namespace
 IMAGE_NAME=foobar-api:latest
 
@@ -17,29 +17,29 @@ build-image: ## Build the Docker image locally
 	@echo "--- Building Docker image ---"
 	docker build -t $(IMAGE_NAME) . 
 
-setup-infra: ## Prepare Namespace, RBAC, Certs, and Traefik
+setup-infra: ## prepare namespace, RBAC, certs, and Traefik
 	@echo "--- Setting up Infrastructure ---"
-	kubectl apply -f k8s/base/namespace.yaml 
-	# Make script executable and run it
+	kubectl apply -f k8s/base/namespace.yaml
 	chmod +x scripts/generate-certs.sh
 	./scripts/generate-certs.sh
-	kubectl apply -f k8s/traefik/rbac.yaml 
-	kubectl apply -f k8s/base/pvc.yaml 
-	# Apply Traefik Infrastructure
-	kubectl apply -f k8s/traefik/traefik-deployment.yaml 
-	# Deploy Dynamic Config as a ConfigMap if it's not already defined in YAML
-	kubectl apply -f k8s/traefik/traefik-config.yaml 
-	kubectl apply -f k8s/traefik/dynamic-conf.yaml 
+	kubectl apply -f k8s/traefik/rbac.yaml
+	kubectl apply -f k8s/base/pvc.yaml
+	kubectl apply -f k8s/traefik/traefik-deployment.yaml
+	# create the ConfigMap from the local file instead of applying the file itself
+	kubectl create configmap traefik-dynamic-config \
+		--from-file=dynamic.yaml=k8s/traefik/dynamic-conf.yaml \
+		-n $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f k8s/traefik/traefik-config.yaml
 
-deploy-app: ## Deploy the API and Network Policies
+deploy-app: ## deploy the API and network policies
 	@echo "--- Deploying Application ---"
 	kubectl apply -f k8s/base/deployment.yaml 
 	kubectl apply -f k8s/base/service.yaml 
 	kubectl apply -f k8s/base/network-policy.yaml 
 
-clean: ## Remove the entire stack
+clean: ## remove the entire stack
 	@echo "--- Cleaning up ---"
 	kubectl delete namespace $(NAMESPACE) 
 
-help: ## Show this help menu 
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' [cite: 7]
+help: ## Show a help menu 
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

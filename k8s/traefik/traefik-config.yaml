@@ -1,3 +1,4 @@
+# standard K8S ingress resource defining routing rules and TLS entrypoints
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,6 +21,10 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true" # Forces TLS for this ingress
 spec:
+# adding this block helps Traefik associate the host with TLS
+  tls:
+  - hosts:
+    - foobar.local
   rules:
   - host: foobar.local
     http:

@@ -1,3 +1,4 @@
+# the edge-routing engine; configured to mount the certificate PVC and reload dynamic configs
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,8 +29,10 @@ spec:
         args:
           - "--providers.kubernetesingress"
           # Points to the ConfigMap key dynamic.yaml
-          - "--providers.file.filename=/config/dynamic.yaml"
+          - "--providers.file.directory=/config"
+          - "--providers.file.watch=true" # SRE: Enable dynamic config reloading
           - "--entrypoints.websecure.address=:443"
+          - "--log.level=DEBUG" # temporary for debugging; adjust as needed
           - "--accesslog=true" # SRE: Enable logging for observability
         ports:
           - name: websecure
