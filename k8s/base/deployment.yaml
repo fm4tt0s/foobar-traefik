@@ -25,18 +25,16 @@ spec:
         imagePullPolicy: Never
         securityContext:
           capabilities:
-            add: ["NET_BIND_SERVICE"] # Architect Move: Allow port 80 without root
-        env:
-          - name: CERT
-            value: "/certs/tls.crt"
-          - name: KEY
-            value: "/certs/tls.key"
-          - name: cert # Adding lowercase just in case
-            value: "/certs/tls.crt"
-          - name: key
-            value: "/certs/tls.key"
-        command: ["/foobar-api"]
-        args: ["-port", "80"]
+            add: ["NET_BIND_SERVICE"]
+        # FIX: Explicit binary path and all necessary flags
+        command: ["/home/appuser/foobar-api"]
+        args: 
+          - "-port"
+          - "80"
+          - "-cert"
+          - "/certs/tls.crt"
+          - "-key"
+          - "/certs/tls.key"
         ports:
         - containerPort: 80
         volumeMounts:
@@ -49,21 +47,12 @@ spec:
             port: 80
             scheme: HTTPS
           initialDelaySeconds: 5
-          periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
             port: 80
             scheme: HTTPS
           initialDelaySeconds: 2
-          periodSeconds: 5
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
       volumes:
       - name: certs-volume
         persistentVolumeClaim:

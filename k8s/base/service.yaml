@@ -9,4 +9,4 @@ spec:
   ports:
     - protocol: TCP
       port: 443
-      targetPort: 8080 # Matches the port we forced in the Deployment
+      targetPort: 80 # Alignment: Points to the app's port 80

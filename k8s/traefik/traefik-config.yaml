@@ -5,16 +5,14 @@ metadata:
   name: foobar-ingress
   namespace: foobar-namespace
   annotations:
-    # Use the websecure entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Force TLS for this router
     traefik.ingress.kubernetes.io/router.tls: "true"
-    # Tell Traefik the backend service is using HTTPS
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@file
 spec:
-  # ARCHITECT NOTE: No 'tls:' block here. 
-  # This ensures Traefik uses the PVC certificates from the default store.
+  tls:
+    - hosts:
+        - foobar.local
+      # ARCHITECT TIP: No secretName here forces Traefik to use the PVC certs
   rules:
   - host: foobar.local
     http:
