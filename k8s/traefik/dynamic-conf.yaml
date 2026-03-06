@@ -1,0 +1,5 @@
+# This file will be mounted via ConfigMap into Traefik's /etc/traefik/dynamic/ directory
+tls:
+  certificates:
+    - certFile: /certs/tls.crt   # Path inside the Traefik container
+      keyFile: /certs/tls.key    # Path inside the Traefik container

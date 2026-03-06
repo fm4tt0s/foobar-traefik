@@ -1,0 +1,7 @@
+# isolating the stack
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foobar-namespace
+  labels:
+    app: foobar-api

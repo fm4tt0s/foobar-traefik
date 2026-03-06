@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-certs-pvc
+  namespace: foobar-namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Architect Tip: Use empty string for local/standard testing to 
+  # use the default provisioner, or specify 'standard' for Minikube.
+  storageClassName: "" 
+  resources:
+    requests:
+      storage: 128Mi

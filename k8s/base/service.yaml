@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: foobar-service
+  namespace: foobar-namespace
+  labels:
+    app: foobar-api
+spec:
+  selector:
+    app: foobar-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80         # Port the Service listens on
+      targetPort: 8080 # Port the Go app listens on (from Dockerfile)
+  type: ClusterIP

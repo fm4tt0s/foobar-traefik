@@ -1,0 +1,60 @@
+# includes liveness/readiness probes and monitoring annotations
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foobar-api
+  namespace: foobar-namespace
+  labels:
+    app: foobar-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foobar-api
+  template:
+    metadata:
+      labels:
+        app: foobar-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+      - name: foobar-api
+        image: foobar-api:latest
+        imagePullPolicy: Never # For local testing (Kind/Minikube)
+        ports:
+        - containerPort: 8080
+        # SRE: Reliability Probes
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foobar-service
+  namespace: foobar-namespace
+spec:
+  selector:
+    app: foobar-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: foobar-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      # SRE: Ensure certs are present before starting the main process
+      initContainers:
+      - name: wait-for-certs
+        image: alpine
+        command: ['sh', '-c', 'until [ -f /certs/tls.crt ]; do echo waiting for certs; sleep 2; done']
+        volumeMounts:
+        - name: certs-volume
+          mountPath: /certs
+      containers:
+      - name: traefik
+        image: traefik:v3.0
+        args:
+          - "--providers.kubernetesingress"
+          # Points to the ConfigMap key dynamic.yaml
+          - "--providers.file.filename=/config/dynamic.yaml"
+          - "--entrypoints.websecure.address=:443"
+          - "--accesslog=true" # SRE: Enable logging for observability
+        ports:
+          - name: websecure
+            containerPort: 443
+        volumeMounts:
+          - name: certs-volume
+            mountPath: /certs
+            readOnly: true
+          - name: config-volume
+            mountPath: /config
+            readOnly: true
+      volumes:
+        - name: certs-volume
+          persistentVolumeClaim:
+            claimName: traefik-certs-pvc
+        - name: config-volume
+          configMap:
+            name: traefik-dynamic-config # Matches the CM name in your config file
+            
