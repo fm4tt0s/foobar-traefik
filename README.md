@@ -64,12 +64,6 @@ When testing it locally, you need to add this to `/etc/hosts` so you can see the
 
 ```
 
-You can edit the file directly (sudo vi/emacs/ed/whatever) or simply run:
-```bash
-sudo tee -a /etc/hosts <<< "127.0.0.1 foobar.local"
-
-```
-
 ### Prerequisites
 
 * A running Kubernetes cluster (`Kind`, `Minikube`, or Cloud-managed).
@@ -102,7 +96,7 @@ kubectl get pods -n foobar-namespace -l app=foobar-api
 
 * If they show `0/1 READY`, run 
 ```bash
-kubectl describe pod -n foobar-namespace -l app=foobar-api.
+kubectl describe pod -n foobar-namespace -l app=foobar-api
 
 ```
 * Check if the Go application is actually listening on `/` or if it requires a different health check path (like `/health`).
@@ -180,6 +174,8 @@ curl -vI -k https://foobar.local --resolve foobar.local:443:127.0.0.1
 * -vI: shows the verbose header info (including the certificate CN)
 * -k: allows the self-signed certificate you generated in your script
 * --resolve: maps the domain to your local IP without needing to edit `/etc/hosts` immediately (but, don't forget about it)
+
+* You should now see subject: CN=foobar.local and a 200 OK (or similar success code).
 
 If you reached this point, it's all deployed, and the API is accessible via HTTPS. You can verify the secure connection using:
 ```bash

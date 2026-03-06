@@ -1,4 +1,4 @@
-# service definition including SRE-focused liveness/readiness probes and resource constraints
+# Service definition including SRE-focused liveness/readiness probes and resource constraints
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,27 +15,46 @@ spec:
     metadata:
       labels:
         app: foobar-api
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - name: foobar-api
         image: foobar-api:latest
-        imagePullPolicy: Never # For local testing (Kind/Minikube)
+        imagePullPolicy: Never
+        securityContext:
+          capabilities:
+            add: ["NET_BIND_SERVICE"] # Architect Move: Allow port 80 without root
+        env:
+          - name: CERT
+            value: "/certs/tls.crt"
+          - name: KEY
+            value: "/certs/tls.key"
+          - name: cert # Adding lowercase just in case
+            value: "/certs/tls.crt"
+          - name: key
+            value: "/certs/tls.key"
+        command: ["/foobar-api"]
+        args: ["-port", "80"]
         ports:
-        - containerPort: 8080
-        # SRE: Reliability Probes
+        - containerPort: 80
+        volumeMounts:
+        - name: certs-volume
+          mountPath: /certs
+          readOnly: true
         livenessProbe:
           httpGet:
             path: /
-            port: 8080
+            port: 80
+            scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8080
+            port: 80
+            scheme: HTTPS
           initialDelaySeconds: 2
           periodSeconds: 5
         resources:
@@ -45,16 +64,7 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: foobar-service
-  namespace: foobar-namespace
-spec:
-  selector:
-    app: foobar-api
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
+      volumes:
+      - name: certs-volume
+        persistentVolumeClaim:
+          claimName: traefik-certs-pvc

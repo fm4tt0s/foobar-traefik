@@ -1,30 +1,20 @@
-# standard K8S ingress resource defining routing rules and TLS entrypoints
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: traefik-dynamic-config
-  namespace: foobar-namespace
-data:
-  # This key 'dynamic.yaml' must match the --providers.file.filename arg in deployment
-  dynamic.yaml: |
-    tls:
-      certificates:
-        - certFile: /certs/tls.crt
-          keyFile: /certs/tls.key
----
+# Traefik Ingress resource defining routing rules and TLS entrypoints.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: foobar-ingress
   namespace: foobar-namespace
   annotations:
+    # Use the websecure entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true" # Forces TLS for this ingress
+    # Force TLS for this router
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Tell Traefik the backend service is using HTTPS
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@file
 spec:
-# adding this block helps Traefik associate the host with TLS
-  tls:
-  - hosts:
-    - foobar.local
+  # ARCHITECT NOTE: No 'tls:' block here. 
+  # This ensures Traefik uses the PVC certificates from the default store.
   rules:
   - host: foobar.local
     http:
@@ -35,4 +25,4 @@ spec:
           service:
             name: foobar-service
             port:
-              number: 80
+              number: 443

@@ -1,5 +1,9 @@
-# Traefik file provider config, bridges the physical PVC certificate files to the logical TLS store
 tls:
   certificates:
-    - certFile: /certs/tls.crt   # Path inside the Traefik container
-      keyFile: /certs/tls.key    # Path inside the Traefik container
+    - certFile: /certs/tls.crt
+      keyFile: /certs/tls.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/tls.crt
+        keyFile: /certs/tls.key

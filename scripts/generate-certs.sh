@@ -77,6 +77,10 @@ kubectl wait --for=condition=Ready pod/pvc-helper -n "${_NAMESPACE}" --timeout=9
 tellmom "copying certificates to PVC..."
 kubectl cp tls.crt "${_NAMESPACE}"/pvc-helper:/certs/tls.crt
 kubectl cp tls.key "${_NAMESPACE}"/pvc-helper:/certs/tls.key
+tellmom "fixing file permissions for appuser (UID 1000)..."
+kubectl exec -n "${_NAMESPACE}" pvc-helper -- chown -R 1000:1000 /certs
+kubectl exec -n "${_NAMESPACE}" pvc-helper -- chmod 644 /certs/tls.crt
+kubectl exec -n "${_NAMESPACE}" pvc-helper -- chmod 600 /certs/tls.key
 
 tellmom "cleaning up temporary pod..."
 # remove --force to avoid the warning that trips up some shells

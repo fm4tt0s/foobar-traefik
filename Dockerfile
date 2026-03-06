@@ -23,7 +23,8 @@ USER appuser
 WORKDIR /home/appuser/
 
 # copy the binary from the builder stage
-COPY --from=builder /app/foobar-api .
+# COPY --from=builder /app/foobar-api .
+COPY --from=builder /app/ .
 
 EXPOSE 8080
 ENTRYPOINT ["./foobar-api"]

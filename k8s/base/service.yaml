@@ -1,17 +1,12 @@
-# internal ClusterIP service to enforce zero-trust routing via the Ingress controller
 apiVersion: v1
 kind: Service
 metadata:
   name: foobar-service
   namespace: foobar-namespace
-  labels:
-    app: foobar-api
 spec:
   selector:
     app: foobar-api
   ports:
-    - name: http
-      protocol: TCP
-      port: 80         # Port the Service listens on
-      targetPort: 8080 # Port the Go app listens on (from Dockerfile)
-  type: ClusterIP
+    - protocol: TCP
+      port: 443
+      targetPort: 8080 # Matches the port we forced in the Deployment
