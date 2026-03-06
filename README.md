@@ -64,6 +64,12 @@ When testing it locally, you need to add this to `/etc/hosts` so you can see the
 
 ```
 
+You can edit the file directly (sudo vi/emacs/ed/whatever) or simply run:
+```bash
+sudo tee -a /etc/hosts <<< "127.0.0.1 foobar.local"
+
+```
+
 ### Prerequisites
 
 * A running Kubernetes cluster (`Kind`, `Minikube`, or Cloud-managed).
