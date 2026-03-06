@@ -1,18 +1,18 @@
-# 🚀 Foobar-API: Secure Kubernetes Deployment
+# Foobar-API: Secure Kubernetes Deployment
 
-## Executive Summary
+## Summary
 
-This project demonstrates the containerization and deployment of the `foobar-api` (Go-based) into a Kubernetes environment. The solution emphasizes **Zero Trust** security, **SRE observability**, and a specialized handling of TLS certificates via **Persistent Volume Claims (PVC)** to meet specific organizational constraints.
+This project demonstrates the containerization and deployment of the `foobar-api` (Go-based) into a K8S env. The solution emphasizes **Zero Trust** security, **SRE observability**, and a specialized handling of TLS certificates via **Persistent Volume Claims (PVC)**.
 
-The architecture uses **Traefik Proxy** as the Edge Router, providing automated TLS termination and traffic management.
+The architecture uses **Traefik Proxy** as the edge router, providing automated TLS termination and traffic management.
 
 ---
 
-## 🏗 Architectural Decisions
+## Architectural Decisions
 
 ### 1. TLS Termination via File Provider (PVC)
 
-While standard Kubernetes deployments typically leverage `Secrets` or `cert-manager` for certificate management, this solution implements a **Traefik File Provider**.
+While standard K8S deployments usually leverage `secrets` or `cert-manager` for certificate management, this solution implements a **Traefik File Provider**.
 
 * **Reasoning:** By mounting a PVC to the Traefik deployment, we provide a mechanism for external certificate rotation (e.g., via a sidecar or legacy PKI process) without requiring Kubernetes API Secret updates.
 * **Implementation:** Traefik is configured to watch `/certs/` on the mounted volume for `tls.crt` and `tls.key`.
@@ -31,34 +31,34 @@ While standard Kubernetes deployments typically leverage `Secrets` or `cert-mana
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .
-├── Dockerfile              # Multi-stage build for minimal footprint
-├── Makefile                # Automation for the entire deployment lifecycle
+├── Dockerfile              # multi-stage build for minimal footprint
+├── Makefile                # automation for the entire deployment lifecycle
 ├── k8s/
-│   ├── base/               # Core Application Manifests
+│   ├── base/               # core Application Manifests
 │   │   ├── deployment.yaml # API Deployment (2 replicas)
-│   │   ├── service.yaml    # Internal ClusterIP service
-│   │   ├── pvc.yaml        # Certificate storage
+│   │   ├── service.yaml    # internal ClusterIP service
+│   │   ├── pvc.yaml        # certificate storage
 │   │   └── network-policy.yaml
-│   └── traefik/            # Ingress Infrastructure
-│       ├── rbac.yaml       # Controller permissions
+│   └── traefik/            # ingress Infrastructure
+│       ├── rbac.yaml       # controller permissions
 │       ├── traefik-deployment.yaml
-│       ├── traefik-config.yaml # Ingress rules
-│       └── dynamic-conf.yaml   # TLS File Provider mapping
+│       ├── traefik-config.yaml #ingress rules
+│       └── dynamic-conf.yaml   # TLS file provider mapping
 └── scripts/
-    └── generate-certs.sh   # Automated self-signed cert generation
+    └── generate-certs.sh   # automated self-signed cert generation
 
 ```
 
 ---
 
-## 🚀 Deployment Procedure
+## Deployment Procedure
 
 ### Local Testing
-When testing it locally, you need to add this to **/etc/hosts** so you can see the TLS cert in action.
+When testing it locally, you need to add this to `/etc/hosts` so you can see the TLS cert in action.
 ```text
 127.0.0.1 foobar.local
 
@@ -71,7 +71,7 @@ When testing it locally, you need to add this to **/etc/hosts** so you can see t
 
 ### Execution
 
-The included `Makefile` handles the orchestration of infrastructure and application layers in the correct order.
+The included `Makefile` handles the orchestration of infrastructure and application layers.
 
 1. **Full Deployment:**
 ```bash
@@ -79,8 +79,8 @@ make all
 
 ```
 
+*This will: build the image -> create namespace -> generate certs -> populate PVC -> deploy Traefik -> deploy API.*
 
-*This will: Build the image -> Create Namespace -> Generate Certs -> Populate PVC -> Deploy Traefik -> Deploy API.*
 2. **Verification:**
 Once deployed, the API is accessible via HTTPS. You can verify the secure connection using:
 ```bash
@@ -96,11 +96,9 @@ make clean
 
 ```
 
-
-
 ---
 
-## 📈 Future Considerations
+## Future Considerations
 
 * **Key Management:** Transition from PVC-stored certificates to a native **KMS/Vault** integration using `External Secrets Operator`.
 * **Autoscaling:** Implement a `HorizontalPodAutoscaler` (HPA) based on custom Traefik metrics (request-per-second) rather than just CPU/RAM.
