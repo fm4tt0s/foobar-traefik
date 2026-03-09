@@ -354,10 +354,6 @@ With this configuration, a `POST 500` to `/health` will mark the pod `NotReady`,
 
 ---
 
-Here's a clean section for the README:
-
----
-
 ## Observability: Prometheus Metrics
 
 Traefik exposes a native Prometheus metrics endpoint that requires no additional tooling or changes to the application stack. Enabling it is purely additive — two arguments to the Traefik deployment and one port addition to the service.
