@@ -1,4 +1,4 @@
-# The edge-routing engine; configured to mount the certificate PVC and reload dynamic configs.
+# Traefik with CRD+file+ingress providers
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +17,7 @@ spec:
         app: traefik
     spec:
       serviceAccountName: traefik-ingress-controller
-      # SRE: Ensuring certs exist before the engine starts
+      # ensuring certs exist before the engine starts
       initContainers:
       - name: wait-for-certs
         image: alpine
@@ -30,12 +30,14 @@ spec:
         image: traefik:v3.0
         args:
           - "--providers.kubernetesingress"
-          # Architect's Fix: Point to the directory and enable watch for hot-reloads
+          # point to the directory and enable watch for hot-reloads
+          - "--providers.kubernetescrd"
           - "--providers.file.directory=/config"
           - "--providers.file.watch=true"
           - "--entrypoints.web.address=:80"
           - "--entrypoints.websecure.address=:443"
-          - "--log.level=DEBUG" 
+          - "--api.insecure=true"
+          - "--log.level=DEBUG"
         ports:
           - name: web
             containerPort: 80
@@ -44,11 +46,11 @@ spec:
           - name: admin
             containerPort: 8080
         volumeMounts:
-          # Mount the certificates from the PVC
+          # mount the certificates from the PVC
           - name: certs-volume
             mountPath: /certs
             readOnly: true
-          # Mount the dynamic configuration from the ConfigMap
+          # mount the dynamic configuration from the ConfigMap
           - name: config-volume
             mountPath: /config
       volumes:

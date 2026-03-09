@@ -1,4 +1,4 @@
-# security-aware ingress rules restricting traffic flow exclusively to authorized Traefik routes
+# allow ingress only from Traefik
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -14,4 +14,5 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/name: traefik
+          # match the label "app: traefik" from Traefik deployment
+          app: traefik

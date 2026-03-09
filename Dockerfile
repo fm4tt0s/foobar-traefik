@@ -1,4 +1,4 @@
-# secure multi-stage build: optimizing for minimal attack surface and build-cache efficiency
+# multi-stage build, non-root user
 # stage 1 build
 FROM golang:1.22.1-alpine3.19 AS builder
 WORKDIR /app
@@ -16,15 +16,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o foobar-api .
 # stage 2 final image
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
-
-# security: implement non-root execution
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# create the directory and set ownership before switching users
+RUN mkdir -p /home/appuser && chown -R appuser:appgroup /home/appuser
 USER appuser
 WORKDIR /home/appuser/
 
-# copy the binary from the builder stage
-# COPY --from=builder /app/foobar-api .
-COPY --from=builder /app/ .
+# ensure the binary and all files copied are owned by our non-root user
+COPY --from=builder --chown=appuser:appgroup /app/ .
 
 EXPOSE 8080
 ENTRYPOINT ["./foobar-api"]

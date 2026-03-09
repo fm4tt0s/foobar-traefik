@@ -1,4 +1,4 @@
-# RPAC, Role-Based Access Control ensuring Traefik has the minimum necessary API permissions to watch resources
+# ServiceAccount + ClusterRole (all traefik.io resources)
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19,6 +19,19 @@ rules:
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses/status"]
     verbs: ["update"]
+  - apiGroups: ["traefik.io"]
+    resources:
+      - ingressroutes
+      - ingressroutetcps
+      - ingressrouteudps
+      - middlewares
+      - middlewaretcps
+      - serverstransports
+      - serverstransporttcps
+      - tlsoptions
+      - tlsstores
+      - traefikservices
+    verbs: ["get", "list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

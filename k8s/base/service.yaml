@@ -1,3 +1,4 @@
+# ClusterIP service on port 8080
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,5 +9,5 @@ spec:
     app: foobar-api
   ports:
     - protocol: TCP
-      port: 443
-      targetPort: 80 # Alignment: Points to the app's port 80
+      port: 8080
+      targetPort: 8080

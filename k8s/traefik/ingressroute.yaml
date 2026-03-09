@@ -1,0 +1,18 @@
+# IngressRoute CRD: HTTPS routing to foobar-service
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: foobar-ingressroute
+  namespace: foobar-namespace
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`foobar.local`)
+      kind: Rule
+      services:
+        - name: foobar-service
+          port: 8080
+          scheme: https
+          serversTransport: insecure-transport
+  tls: {}

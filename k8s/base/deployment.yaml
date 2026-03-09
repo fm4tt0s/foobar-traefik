@@ -1,11 +1,9 @@
-# Service definition including SRE-focused liveness/readiness probes and resource constraints
+# API deployment (2 replicas, PVC cert mounts)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foobar-api
   namespace: foobar-namespace
-  labels:
-    app: foobar-api
 spec:
   replicas: 2
   selector:
@@ -17,42 +15,40 @@ spec:
         app: foobar-api
     spec:
       securityContext:
-        runAsNonRoot: true
         runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: foobar-api
         image: foobar-api:latest
         imagePullPolicy: Never
-        securityContext:
-          capabilities:
-            add: ["NET_BIND_SERVICE"]
-        # FIX: Explicit binary path and all necessary flags
-        command: ["/home/appuser/foobar-api"]
-        args: 
+        args:
           - "-port"
-          - "80"
-          - "-cert"
-          - "/certs/tls.crt"
-          - "-key"
-          - "/certs/tls.key"
+          - "8080"
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         volumeMounts:
-        - name: certs-volume
-          mountPath: /certs
-          readOnly: true
+          - name: certs-volume
+            mountPath: /cert/cert.pem
+            subPath: tls.crt
+            readOnly: true
+          - name: certs-volume
+            mountPath: /cert/key.pem
+            subPath: tls.key
+            readOnly: true
         livenessProbe:
           httpGet:
-            path: /
-            port: 80
+            path: /health
+            port: 8080
             scheme: HTTPS
           initialDelaySeconds: 5
+          periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /
-            port: 80
+            path: /health
+            port: 8080
             scheme: HTTPS
-          initialDelaySeconds: 2
+          initialDelaySeconds: 5
+          periodSeconds: 5
       volumes:
       - name: certs-volume
         persistentVolumeClaim:

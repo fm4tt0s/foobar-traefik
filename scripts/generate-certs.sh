@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
 # author    : felipe mattos
-# email     : fmattos
+# email     : fmattos@
 # date      : March-6-2026
 # version   : 0.2
 #
-# purpose   : automation script for Day-0 certificate lifecycle and programmatic PVC data population.
+# purpose   : automation script for day-0 certificate lifecycle and programmatic PVC data population.
 # remarks   : optimized for late-binding storage provisioners (e.g., Rancher Desktop)
-# require   : kubectl, openssl, and a Kubernetes cluster.
-#
-_deps=("kubectl" "openssl")
+# require   : kubectl, openssl, and a Kubernetes cluster. dependencies already handled on the Makefile
+# changelog :
+#             0.1, felipe mattos, initial version
+#             0.2, felipe mattos, removed dups already handled from Makefile, added error handling, logging, and file permission fixes for non-root appuser (1000)
 
 # runtime globals / variable initialization
 _this="$(basename "${BASH_SOURCE[0]}")"
 _this_path="$( cd "$(dirname "${BASH_SOURCE[0]}")" || return 0 ; pwd -P )"
-
 # base vars
 _NAMESPACE="foobar-namespace"
 _DOMAIN="foobar.local"
@@ -26,18 +26,8 @@ function tellmom() {
     [[ -n "${2}" ]] && exit "${2}"
 }
 
-# first things first
+# first things first - test bash
 [[ -z "${BASH}" || "${BASH_VERSINFO[0]}" -lt 3 ]] && tellmom "ERROR|bash 3+ required" 1
-
-function zitheer() {
-    # what: check if whatever dependency is satisfied
-    local _cmd && _cmd=$(command -v "${1}")
-    [[ -n "${_cmd}" ]] && [[ -f "${_cmd}" ]]
-    return "${?}"
-}
-
-# main
-for _dep in "${_deps[@]}"; do zitheer "${_dep}" || tellmom "${_dep} required" 1; done
 
 # ensure namespace and PVC exist
 tellmom "applying infrastructure manifests..."
@@ -49,7 +39,7 @@ tellmom "generating certificates..."
 openssl req -x509 -newkey rsa:4096 -keyout tls.key -out tls.crt -days 365 -nodes -subj "/CN=${_DOMAIN}"
 
 # use a temporary pod to copy files into the PVC
-# Note: We trigger the pod IMMEDIATELY to satisfy the "WaitForFirstConsumer" policy
+# Note: we trigger the pod IMMEDIATELY to satisfy the "WaitForFirstConsumer" policy
 tellmom "starting helper pod to trigger volume binding..."
 kubectl run pvc-helper --image=alpine:latest -n "${_NAMESPACE}" --restart=Never --overrides='
 {
@@ -64,20 +54,20 @@ kubectl run pvc-helper --image=alpine:latest -n "${_NAMESPACE}" --restart=Never 
   }
 }'
 
-# wait for pod with an increased timeout (90s)
-tellmom "waiting for helper pod to reach Ready state (binding storage)..."
-kubectl wait --for=condition=Ready pod/pvc-helper -n "${_NAMESPACE}" --timeout=90s || {
-    tellmom "Pod failed to reach Ready state. Checking PVC status..."
+# wait for pod with an increased timeout (120s)
+tellmom "waiting for helper pod to reach ready state (binding storage)..."
+kubectl wait --for=condition=Ready pod/pvc-helper -n "${_NAMESPACE}" --timeout=120s || {
+    tellmom "pod failed to reach ready state. checking PVC status..."
     kubectl get pvc -n "${_NAMESPACE}"
     kubectl describe pod pvc-helper -n "${_NAMESPACE}"
     exit 1
 }
 
-# Copy files and cleanup
+# copy files and cleanup
 tellmom "copying certificates to PVC..."
 kubectl cp tls.crt "${_NAMESPACE}"/pvc-helper:/certs/tls.crt
 kubectl cp tls.key "${_NAMESPACE}"/pvc-helper:/certs/tls.key
-# Ensure the non-root appuser (1000) owns these files
+# ensure the non-root appuser (1000) owns these files
 tellmom "fixing file permissions for appuser (UID 1000)..."
 kubectl exec -n "${_NAMESPACE}" pvc-helper -- chown -R 1000:1000 /certs
 kubectl exec -n "${_NAMESPACE}" pvc-helper -- chmod 644 /certs/tls.crt
@@ -88,7 +78,7 @@ tellmom "cleaning up temporary pod..."
 kubectl delete pod pvc-helper -n "${_NAMESPACE}" --grace-period=0 --force
 
 # clean up local files
-rm -rf tls.crt tls.key
+# rm -rf "${_this_path}/tls.crt" "${_this_path}/tls.key" "${_this_path}/key.pem" "${_this_path}/cert.pem"
 tellmom "successfully populated PVC with certificates."
 # explicitly return success to the Makefile - this gets wild some times
 exit 0 

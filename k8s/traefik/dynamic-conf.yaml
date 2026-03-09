@@ -1,3 +1,9 @@
+# file provider: TLS cert + insecureSkipVerify transport
+http:
+  serversTransports:
+    insecure-transport:
+      insecureSkipVerify: true # allows Traefik to trust the API's self-signed cert
+
 tls:
   certificates:
     - certFile: /certs/tls.crt
