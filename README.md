@@ -58,6 +58,26 @@ The solution uses native Traefik CRDs:
 - `--api.insecure=true` exposes the Traefik dashboard on port 8080 for runtime inspection
 - 2 API replicas provide basic availability and allow observable load balancing via `X-Forwarded-Server` headers
 
+### Why These Choices Were Made
+
+**Raw manifests over Helm**
+Traefik's official Helm chart is built around K8S secrets and cert-manager/ACME for TLS. The PVC-based certificate requirement puts you immediately at odds with those opinions — you'd spend more effort overriding the chart's defaults than the chart saves you. Raw manifests gave full, explicit control over init containers, volume mounts, file provider config, and CRD apply order, with zero indirection. Helm is the right call for a production Traefik deployment with standard TLS lifecycle management; it's the wrong call when the goal is transparency and non-standard cert handling.
+
+**External cert generation over in-cluster**
+Certs could have been generated inside the cluster via an `initContainer` on the Traefik pod, removing the `openssl` host dependency and the helper pod entirely. That's a valid and simpler approach for a POC. The external generation pattern was chosen deliberately because it better mirrors real enterprise PKI: certificates come from a controlled CA, are rotated independently of the workload, and are injected into the cluster rather than self-signed at runtime by the router. The PVC acts as the handoff point between the external cert lifecycle and the cluster.
+
+**PVC over Kubernetes Secrets for certificates**
+K8S Secrets are base64-encoded at rest by default — not encrypted unless you've configured envelope encryption, which most clusters don't have enabled out of the box. A PVC with proper filesystem permissions (`600` on the key, owned by UID 1000) is at least as safe in a local environment, and more importantly it satisfies the requirement for filesystem-based cert management. It also enables Traefik's file provider hot-reload: rotate the cert on the PVC and Traefik picks it up without a restart.
+
+**ClusterIP service with NetworkPolicy over direct exposure**
+The foobar-api Service is intentionally `ClusterIP` — invisible outside the cluster. The `NetworkPolicy` restricts ingress to API pods exclusively from pods labelled `app: traefik`, so even within the cluster no other workload can reach the API directly. This follows a Zero Trust posture: every hop is explicit and least-privilege, rather than relying on namespace isolation alone.
+
+**Non-root container with minimal base image**
+The Dockerfile uses a two-stage build: a `golang:alpine` builder followed by a minimal `alpine` runtime with a dedicated non-root `appuser` (UID 1000). No shell, no package manager, no build tools in the final image. This reduces attack surface and ensures the binary runs with the minimum privileges needed — relevant here because the app serves TLS directly and holds cert material on its filesystem.
+
+**Traefik CRDs over Ingress annotations**
+Traefik v3 silently dropped support for the `service.serversscheme` and `service.serverstransport` Ingress annotations that v2 supported. Using native `IngressRoute` and `ServersTransport` CRDs instead is not just a workaround — it's the correct v3 architecture. CRDs are first-class Traefik objects with full schema validation, explicit backend scheme control, and no silent failures. The Ingress annotation approach was always a leaky abstraction.
+
 ---
 
 ## Project Structure
@@ -292,7 +312,7 @@ kubectl apply -f k8s/traefik/crds.yaml
   resources:
     - ingressroutes
     - serverstransports
-    - serverstransporttcps   # ← this missing entry broke everything
+    - serverstransporttcps   # this missing entry broke everything
     - tlsoptions
     - tlsstores
     - traefikservices
