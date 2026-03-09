@@ -193,6 +193,7 @@ make test
 ```
 
 * Example output from `make test`:
+```text
 --- Waiting for API to be ready ---
 deployment "foobar-api" successfully rolled out
 --- Running Tests ---
