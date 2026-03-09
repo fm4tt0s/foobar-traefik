@@ -119,7 +119,7 @@ curl -k https://foobar.local --resolve foobar.local:443:127.0.0.1
 curl -k https://foobar.local/api --resolve foobar.local:443:127.0.0.1
 
 # Health check (returns 200)
-curl -k https://foobar.local/health --resolve foobar.local:443:127.0.0.1
+curl -k https://foobar.local/health -w "%{http_code}" --resolve foobar.local:443:127.0.0.1
 ```
 
 * Example output from `/api`:
@@ -225,7 +225,7 @@ kubectl run pvc-check --image=alpine -n foobar-namespace --restart=Never --rm -i
 
 ## Troubleshooting: What Went Wrong and Why
 
-This section documents the real debugging journey from a broken deployment to a working one.
+This section documents my debugging journey from a broken deployment to a working one.
 
 ### Bug 1 — Binary crash: `You need to provide a certificate`
 
@@ -274,8 +274,7 @@ services:
 
 **Fix:** Added a `curl` + `kubectl apply` step in the Makefile to fetch and apply the v3.0.0 CRD manifest before deploying Traefik:
 ```makefile
-curl -o k8s/traefik/crds.yaml \
-  https://raw.githubusercontent.com/traefik/traefik/v3.0.0/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+[ -f k8s/traefik/crds.yaml ] || curl -o k8s/traefik/crds.yaml https://raw.githubusercontent.com/traefik/traefik/v3.0.0/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
 kubectl apply -f k8s/traefik/crds.yaml
 ```
 

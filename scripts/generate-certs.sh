@@ -78,7 +78,7 @@ tellmom "cleaning up temporary pod..."
 kubectl delete pod pvc-helper -n "${_NAMESPACE}" --grace-period=0 --force
 
 # clean up local files
-# rm -rf "${_this_path}/tls.crt" "${_this_path}/tls.key" "${_this_path}/key.pem" "${_this_path}/cert.pem"
+rm -rf "${_this_path}/tls.crt" "${_this_path}/tls.key"
 tellmom "successfully populated PVC with certificates."
 # explicitly return success to the Makefile - this gets wild some times
 exit 0 
