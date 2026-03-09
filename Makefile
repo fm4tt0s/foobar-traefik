@@ -93,8 +93,8 @@ test: ## run basic tests against the deployed API
 	echo "# websocket (echo)"; \
 	if command -v wscat >/dev/null 2>&1; then \
 		wscat -nc wss://foobar.local/echo --execute echo \
-			&& echo "--- WebSocket test passed ---" \
-			|| echo "--- WebSocket test failed ---"; \
+			&& echo "--- WebSocket endpoint is working ---" \
+			|| echo "--- WebSocket endpoint failed ---"; \
 	else \
 		echo "--- wscat is not installed, skipping WebSocket test ---"; \
 	fi \

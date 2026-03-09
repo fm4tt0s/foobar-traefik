@@ -190,6 +190,9 @@ curl -k https://foobar.local/health -w "%{http_code}" --resolve foobar.local:443
 Or... you can use `test` target from Makefile for full testing
 ```bash
 make test
+```
+
+* Example output from `make test`:
 --- Waiting for API to be ready ---
 deployment "foobar-api" successfully rolled out
 --- Running Tests ---
